@@ -455,6 +455,9 @@
     <Compile Include="..\..\app\Fake.Tools.SignTool\SignTool.fs">
       <Link>Fake.Tools.SignTool/SignTool.fs</Link>
     </Compile>
+    <Compile Include="..\..\app\Fake.Tools.DynamicCrm\DynamicCrm.fs">
+      <Link>Fake.Tools.DynamicCrm/DynamicCrm.fs</Link>
+    </Compile>
     <Compile Include="..\..\app\Fake.Testing.Fixie\Fixie.fs">
       <Link>Fake.Testing.Fixie/Fixie.fs</Link>
     </Compile>
