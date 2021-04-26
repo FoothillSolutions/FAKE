@@ -313,6 +313,7 @@ let dotnetAssemblyInfos =
       "Fake.Tools.Pickles", "Convert Gherkin to HTML"
       "Fake.Tools.Rsync", "Running Rsync commands"
       "Fake.Tools.SignTool", "Running signtool commands"
+      "Fake.Tools.DynamicCrm", "Dynamic CRM tool helper"
       "Fake.Tracing.NAntXml", "NAntXml"
       "Fake.Windows.Chocolatey", "Running and packaging with Chocolatey"
       "Fake.Windows.Registry", "CRUD functionality for Windows registry" ]

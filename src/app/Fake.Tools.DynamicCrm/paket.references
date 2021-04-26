@@ -1,0 +1,4 @@
+group netcore
+FSharp.Core
+Microsoft.Extensions.Logging.Abstractions
+Microsoft.PowerPlatform.Dataverse.Client
