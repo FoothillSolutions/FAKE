@@ -1,8 +1,8 @@
-﻿module Fake.Azure.Cli
+﻿
+module Fake.Azure.Cli
 
 open System
 open Fake.Core
-
     type AzCommands =
        | Account of string 
        | Acr of string 
@@ -175,7 +175,7 @@ open Fake.Core
        | Vmware of string 
        | Webapp of string       
 
-    let parse = function
+    let private parse = function
          | Account str -> sprintf "account %s" str
          | Acr str -> sprintf "Acr %s" str 
          | Acs str -> sprintf "Acs %s" str 
@@ -276,7 +276,7 @@ open Fake.Core
          | LocalContext str -> sprintf "LocalContext %s" str 
          | Lock str -> sprintf "Lock %s" str 
          | Logic str -> sprintf "Logic %s" str 
-         | Login str -> sprintf "Login %s" str 
+         | Login str -> sprintf "Login %s" str
          | Logout str -> sprintf "Logout %s" str 
          | Maintenance str -> sprintf "Maintenance %s" str 
          | Managedapp str -> sprintf "Managedapp %s" str 
@@ -355,7 +355,6 @@ module AzCli =
                  "powershell", sprintf " az %s " commands
              else
                  "az", commands
-         printfn "%s" args
          args
          |> Args.fromWindowsCommandLine 
          |> Seq.toList
@@ -364,11 +363,14 @@ module AzCli =
          |> CreateProcess.withTimeout TimeSpan.MaxValue
          |> Proc.run
 
+
     /// Runs the given process and returns the process result.
     let  run  command =
          let args = command |> parse
-         
-         let result = runPowerOrShRaw args    
+         let result = runPowerOrShRaw args  
 
-         result.ExitCode
+         match result.Result.Output with 
+         | a when a = "[]" -> sprintf "\n Exit Code %d \n %s" result.ExitCode result.Result.Output
+         | _ -> sprintf "\n Exit Code %d \n %s" result.ExitCode result.Result.Error
+      
     
