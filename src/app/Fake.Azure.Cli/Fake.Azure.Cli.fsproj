@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Cli.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fake.Core.Environment\Fake.Core.Environment.fsproj" />
+    <ProjectReference Include="..\Fake.Core.Process\Fake.Core.Process.fsproj" />
+  </ItemGroup>
+
+</Project>
