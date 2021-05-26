@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "dotnet:restore:fake.sln",            
+            "label": "dotnet:restore:fake.sln",
             "group": "build",
             "command": "dotnet restore FAKE.sln",
             "type": "shell",
@@ -14,7 +14,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:build:fake.sln",            
+            "label": "dotnet:build:fake.sln",
             "group": "build",
             "command": "dotnet build FAKE.sln",
             "type": "shell",
@@ -27,7 +27,7 @@
             ]
         },
         {
-            "label": "dotnet:restore:fake-netcore.fsproj",            
+            "label": "dotnet:restore:fake-netcore.fsproj",
             "group": "build",
             "command": "dotnet restore src/app/Fake.netcore/Fake.netcore.fsproj",
             "type": "shell",
@@ -37,7 +37,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:build:fake-netcore.fsproj",            
+            "label": "dotnet:build:fake-netcore.fsproj",
             "group": "build",
             "command": "dotnet build src/app/Fake.netcore/Fake.netcore.fsproj",
             "type": "shell",
@@ -50,7 +50,7 @@
             ]
         },
         {
-            "label": "dotnet:restore:fake-unittests.fsproj",            
+            "label": "dotnet:restore:fake-unittests.fsproj",
             "group": "build",
             "command": "dotnet restore src/test/Fake.Core.UnitTests/Fake.Core.UnitTests.fsproj",
             "type": "shell",
@@ -60,7 +60,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:build:fake-unittests.fsproj",            
+            "label": "dotnet:build:fake-unittests.fsproj",
             "group": "build",
             "command": "dotnet build src/test/Fake.Core.UnitTests/Fake.Core.UnitTests.fsproj",
             "type": "shell",
@@ -73,7 +73,7 @@
             ]
         },
         {
-            "label": "dotnet:run:unitTests",            
+            "label": "dotnet:run:unitTests",
             "group": "test",
             "command": "dotnet run -p src/test/Fake.Core.UnitTests/Fake.Core.UnitTests.fsproj",
             "type": "shell",
@@ -83,7 +83,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:run:commandLineUnitTests",            
+            "label": "dotnet:run:commandLineUnitTests",
             "group": "test",
             "command": "dotnet run -p src/test/Fake.Core.CommandLine.UnitTests/Fake.Core.CommandLine.UnitTests.fsproj",
             "type": "shell",
@@ -93,7 +93,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:run:integrationTests",            
+            "label": "dotnet:run:integrationTests",
             "group": "test",
             "command": "dotnet run -p src/test/Fake.Core.IntegrationTests/Fake.Core.IntegrationTests.fsproj",
             "type": "shell",
@@ -103,18 +103,74 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "dotnet:run:allTests",            
+            "label": "dotnet:run:allTests",
             "group": "test",
             "dependsOn": [
                 "dotnet:run:integrationTests",
                 "dotnet:run:commandLineUnitTests",
-                "dotnet:run:unitTests"  
+                "dotnet:run:unitTests"
             ],
             "type": "shell",
             "presentation": {
                 "reveal": "always"
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: debug",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "fake1:dev",
+                "target": "base",
+                "dockerfile": "${workspaceFolder}/src/app/Fake.netcore/Dockerfile",
+                "context": "${workspaceFolder}",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/app/Fake.netcore/Fake.netcore.fsproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: release",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "fake1:latest",
+                "dockerfile": "${workspaceFolder}/src/app/Fake.netcore/Dockerfile",
+                "context": "${workspaceFolder}",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/app/Fake.netcore/Fake.netcore.fsproj"
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: debug",
+            "dependsOn": [
+                "docker-build: debug"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/app/Fake.netcore/Fake.netcore.fsproj",
+                "enableDebugging": true
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: release",
+            "dependsOn": [
+                "docker-build: release"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/app/Fake.netcore/Fake.netcore.fsproj"
+            }
         }
     ]
 }

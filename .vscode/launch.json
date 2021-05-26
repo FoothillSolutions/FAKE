@@ -4,20 +4,20 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "name": "Debug Build Script",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet:build:fake-netcore.fsproj",
-            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/netcoreapp2.1/fake.dll",
+            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/net6.0/fake.dll",
             "args": [
+                "-vv",
                 "run",
                 "--fsiargs",
                 "--debug:portable --optimize-",
                 "build.fsx",
                 "-st",
-                "DownloadPaket"
+                "Req"
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
@@ -28,7 +28,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet:build:fake-netcore.fsproj",
-            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/netcoreapp2.1/fake.dll",
+            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/net6.0/fake.dll",
             "args": [
                 "run",
                 "--fsiargs",
@@ -46,7 +46,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet:build:fake-unittests.fsproj",
-            "program": "${workspaceRoot}/src/test/Fake.Core.UnitTests/bin/Debug/netcoreapp2.1/Fake.Core.UnitTests.dll",
+            "program": "${workspaceRoot}/src/test/Fake.Core.UnitTests/bin/Debug/net6.0/Fake.Core.UnitTests.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "console": "internalConsole",
@@ -58,7 +58,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet:build:fake-netcore.fsproj",
-            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/netcoreapp2.1/fake.dll",
+            "program": "${workspaceRoot}/src/app/Fake.netcore/bin/Debug/net6.0/fake.dll",
             "args": [
                 "run",
                 "--nocache",
@@ -81,8 +81,11 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet:build:fake-unittests.fsproj",
-            "program": "${workspaceRoot}/src/test/Fake.Core.UnitTests/bin/Debug/netcoreapp2.1/Fake.Core.UnitTests.dll",
-            "args": ["--run", "Fake.Core.Target.Tests/basic performance #2036"],
+            "program": "${workspaceRoot}/src/test/Fake.Core.UnitTests/bin/Debug/net6.0/Fake.Core.UnitTests.dll",
+            "args": [
+                "--run",
+                "Fake.Core.Target.Tests/basic performance #2036"
+            ],
             "cwd": "${workspaceRoot}",
             "console": "internalConsole",
             "stopAtEntry": false,
@@ -93,6 +96,15 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickProcess}"
+        },
+        {
+            "name": "Docker .NET Core Launch",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: debug",
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/app/Fake.netcore/Fake.netcore.fsproj"
+            }
         }
     ]
 }

@@ -1,0 +1,9 @@
+
+version: '3.4'
+
+services:
+  fakenetcore:
+    image: fakenetcore
+    build:
+      context: .
+      dockerfile: src/app/Fake.netcore/Dockerfile
