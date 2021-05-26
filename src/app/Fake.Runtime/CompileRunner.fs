@@ -23,7 +23,7 @@ let private handleCoreCaching (context:FakeContext) (compiledAssembly:string) (e
      Warnings = errors }
 
 /// public, because it is used by test code
-let nameParser cachedAssemblyFileName scriptFileName =
+let nameParser cachedAssemblyFileName (scriptFileName:string) =
     let noExtension = Path.GetFileNameWithoutExtension(scriptFileName)
     let inline fixNamespace (n:string) =
         n.Replace(".", "-")
@@ -127,7 +127,7 @@ let compile (context:FakeContext) outDll =
     let options =
         { co.FsiOptions with
             FullPaths = true
-            ScriptArgs = "--simpleresolution" :: "--targetprofile:netstandard" :: "--nowin32manifest" :: fcsDependencyManagerOptions @ "-o" :: outDll :: context.Config.ScriptFilePath :: co.FsiOptions.ScriptArgs
+            ScriptArgs = "--nowin32manifest" :: fcsDependencyManagerOptions @ "-o" :: outDll :: context.Config.ScriptFilePath :: co.FsiOptions.ScriptArgs
         }
     // Replace fsharp.core with current version, see https://github.com/fsharp/FAKE/issues/2001
     let fixReferences (s:string list) =

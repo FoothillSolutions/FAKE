@@ -41,7 +41,7 @@ module ExpectoHelpers =
           let spirit =
             if summary.successful then "Success!" else String.Empty
           let commonAncestor =
-            let rec loop ancestor (descendants : string list) =
+            let rec loop (ancestor:string) (descendants : string list) =
               match descendants with
               | [] -> ancestor
               | hd::tl when hd.StartsWith(ancestor)->

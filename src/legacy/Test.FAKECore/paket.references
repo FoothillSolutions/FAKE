@@ -1,7 +1,0 @@
-FSharp.Core
-Machine.Specifications.Should
-Mono.Web.Xdt
-Mono.Cecil
-NuGet.Protocol
-// Because otherwise this project will overwrite the version with an implicit one...
-System.ValueTuple

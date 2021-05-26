@@ -102,7 +102,7 @@ let getFakeContext name (f:FakeExecutionContext)  =
   match f.Context.TryGetValue(name) with
   | true, v -> Some v
   | _ -> None
-let removeFakeContext name (f:FakeExecutionContext) =
+let removeFakeContext (name:string) (f:FakeExecutionContext) =
   match f.Context.TryRemove(name) with
   | true, v -> Some v
   | _ -> None

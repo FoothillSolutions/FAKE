@@ -40,13 +40,14 @@ let paketCachingProvider (config:FakeConfig) cacheDir (paketApi:Paket.Dependenci
   let groupStr = match group with Some g -> g | None -> "Main"
   let groupName = Paket.Domain.GroupName (groupStr)
 #if DOTNETCORE
-  //let framework = Paket.FrameworkIdentifier.DotNetCoreApp (Paket.DotNetCoreAppVersion.V2_0)
-  let framework = Paket.FrameworkIdentifier.DotNetStandard (Paket.DotNetStandardVersion.V2_0)
+  // let framework = Paket.FrameworkIdentifier.DotNetCoreApp (Paket.DotNetCoreAppVersion.V2_0)
+  let framework = Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V6)
+  // let framework = Paket.FrameworkIdentifier.DotNetStandard (Paket.DotNetStandardVersion.V2_0)
 #else
   let framework = Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V4_6)
 #endif
   let lockFilePath = Paket.DependenciesFile.FindLockfile paketApi.DependenciesFile
-  let parent s = Path.GetDirectoryName s
+  let parent (s:string) = Path.GetDirectoryName s
   let comb name s = Path.Combine(s, name)
   let dependencyCacheHashFile = Path.Combine(cacheDir, "dependencies.cached")
   let dependencyCacheFile = Path.Combine(cacheDir, "dependencies.txt")
@@ -89,8 +90,13 @@ let paketCachingProvider (config:FakeConfig) cacheDir (paketApi:Paket.Dependenci
           |> Async.RunSynchronously
         extractedFolder
     let sdkDir = Path.Combine(extractedFolder, "build", "netstandard2.0", "ref")
-    Directory.GetFiles(sdkDir, "*.dll")
+    // Directory.GetFiles(sdkDir, "*.dll")
+    // Directory.GetFiles("C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\5.0.5", "*.dll")
+    // Directory.GetFiles("C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App\\6.0.0-preview.3.21201.3", "*.dll")
+    Directory.GetFiles("C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\6.0.0-preview.3.21201.4", "*.dll")
+    // |> Seq.filter(fun dll -> ["Microsoft.CSharp.dll"; "Microsoft.VisualBasic.Core.dll"; "Microsoft.VisualBasic.dll";"System.ComponentModel.Annotations.dll";"System.ComponentModel.DataAnnotations.dll";"System.Configuration.dll";"System.Data.DataSetExtensions.dll";"System.Diagnostics.DiagnosticSource.dll";"System.Formats.Asn1.dll";"System.IO.Compression.Brotli.dll";"System.Net.Http.Json.dll";"System.Net.HttpListener.dll";"System.Net.Mail.dll";"System.Net.ServicePoint.dll";"System.Net.WebClient.dll";"System.Net.WebProxy.dll";"System.Reflection.DispatchProxy.dll";"System.Reflection.Emit.dll";"System.Reflection.Emit.ILGeneration.dll";"System.Reflection.Emit.Lightweight.dll";"System.Reflection.Metadata.dll";"System.Reflection.TypeExtensions.dll";"System.Runtime.Intrinsics.dll";"System.Runtime.Loader.dll";"System.Security.dll";"System.ServiceProcess.dll";"System.Text.Encoding.CodePages.dll";"System.Text.Encodings.Web.dll";"System.Text.Json.dll";"System.Threading.Channels.dll";"System.Transactions.Local.dll";"System.Web.HttpUtility.dll";"WindowsBase.dll"] |> List.filter(fun excluded -> dll.Contains excluded) |> List.length = 0)
     |> Seq.toList
+    // []
 #endif
 
 
@@ -282,7 +288,7 @@ let paketCachingProvider (config:FakeConfig) cacheDir (paketApi:Paket.Dependenci
         Cache = cache.Value
         ScriptType = Paket.LoadingScripts.ScriptGeneration.ScriptType.FSharp
         Groups = [groupName]
-        DefaultFramework = false, (Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V4_7_1))
+        DefaultFramework = false, (Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V6))
       }
       |> Async.StartAsTask
 
@@ -360,8 +366,7 @@ let paketCachingProvider (config:FakeConfig) cacheDir (paketApi:Paket.Dependenci
       member __.TryLoadCache (context) =
           let references =
               knownDependencies.Value
-              |> List.choose (function DependencyFile.Assembly a when a.IsReferenceAssembly -> Some a | _ -> None)
-              |> List.map (fun (a:AssemblyData) -> a.Info.Location)
+              |> List.map (fun (a:DependencyFile) -> a.Location)
           let runtimeAssemblies =
               knownDependencies.Value
               |> List.choose (function DependencyFile.Assembly a when not a.IsReferenceAssembly -> Some a | _ -> None)
@@ -541,7 +546,7 @@ let prepareFakeScript (config:FakeConfig) : PrepareInfo =
         let defaultPaketCode = """
         source https://api.nuget.org/v3/index.json
         storage: none
-        framework: netstandard2.0
+        framework: net6.0,netstandard2.0
         nuget FSharp.Core
                 """
         if Environment.environVar "FAKE_ALLOW_NO_DEPENDENCIES" <> "true" then

@@ -7,7 +7,7 @@ FSharp.Core
 
 Microsoft.DotNet.PlatformAbstractions
 System.Runtime.Loader
-NETStandard.Library
+
 
 FSharp.Compiler.Service
   exclude FSharp.Compiler.Service.MSBuild.*.dll
