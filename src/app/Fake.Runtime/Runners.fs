@@ -59,6 +59,9 @@ type RuntimeOptions =
 type RedirectConfig =
   { Out : TextWriter
     Err : TextWriter }
+
+type ReferencedAssembliesVersion = NetStandard | DotNet
+
 type FakeConfig =
   { VerboseLevel : Trace.VerboseLevel
     ScriptFilePath : string
@@ -69,7 +72,8 @@ type FakeConfig =
     UseSimpleRestore : bool
     RestoreOnlyGroup : bool
     Redirect: RedirectConfig option
-    ScriptArgs: string list }
+    ScriptArgs: string list
+    ReferencedAssembliesVersion: ReferencedAssembliesVersion }
   member x.FsArgs = x.CompileOptions.FsiOptions.AsArgs
 
 let fsiAssemblyName = "removeme"
