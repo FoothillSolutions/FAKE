@@ -3,11 +3,12 @@
 open System
 open System.IO
 open Fake.Runtime
-open Fake.Runtime.Runners
-open Fake.Runtime.Trace
 open Fake.Core
 open Fake.DotNet
 open Fake.IO.FileSystemOperators
+open Fake.Runtime.Runners
+open Fake.Runtime.Trace
+
 open Paket
 open System
 
@@ -35,26 +36,98 @@ let internal filterValidAssembly (logLevel:VerboseLevel) (isSdk, isReferenceAsse
     with e ->
         if logLevel.PrintVerbose then Trace.log <| sprintf "Could not load '%s': %O" fullName e
         None
-     
+
+#if DOTNETCORE
+let internal tryGetSDKVersionFromGlobalJson = DotNet.tryGetSDKVersionFromGlobalJson()
+
+let internal referencedAssembliesVersion = 
+    // here we will match for .NET 6 sdk from a global.json file. If found we will use
+    // .NET 6 runtime assemblies. Otherwise we will default to .Netstandard 2.0.3
+    match tryGetSDKVersionFromGlobalJson.IsSome && tryGetSDKVersionFromGlobalJson.Value.StartsWith "6" with
+    | true ->
+      Trace.traceVerbose <| (sprintf "%s" "Using .Net 6 assemblies")
+      Runners.ReferencedAssembliesVersion.DotNet
+    |  false -> 
+      Trace.traceVerbose <| (sprintf"%s" "Use .Netstandard assemblies") 
+      Runners.ReferencedAssembliesVersion.NetStandard
+#endif
+
 let paketCachingProvider (config:FakeConfig) cacheDir (paketApi:Paket.Dependencies) (paketDependenciesFile:Lazy<Paket.DependenciesFile>) group =
   use __ = Fake.Profile.startCategory Fake.Profile.Category.Paket
   let logLevel = config.VerboseLevel
   let script = config.ScriptFilePath
   let groupStr = match group with Some g -> g | None -> "Main"
   let groupName = Paket.Domain.GroupName (groupStr)
-#if DOTNETCORE
-  let framework = 
-    if sdkVersionIsDotNet6 
-    then Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V6)
-    else Paket.FrameworkIdentifier.DotNetStandard (Paket.DotNetStandardVersion.V2_0)
-#else
-  let framework = Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V4_6)
-#endif
   let lockFilePath = Paket.DependenciesFile.FindLockfile paketApi.DependenciesFile
   let parent (s:string) = Path.GetDirectoryName s
   let comb name s = Path.Combine(s, name)
   let dependencyCacheHashFile = Path.Combine(cacheDir, "dependencies.cached")
   let dependencyCacheFile = Path.Combine(cacheDir, "dependencies.txt")
+
+#if DOTNETCORE
+
+  let sdkVersionIsDotNet6 = tryGetSDKVersionFromGlobalJson.IsSome && tryGetSDKVersionFromGlobalJson.Value.StartsWith "6"
+
+  let framework = 
+      if sdkVersionIsDotNet6
+      then Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V6)
+      else Paket.FrameworkIdentifier.DotNetStandard (Paket.DotNetStandardVersion.V2_0)
+
+  let getRuntimeAssemblies(nuGetPackage, version, pathSuffix) = 
+        // We need use "real" reference assemblies as using the currently running runtime assemlies doesn't work:
+        // see https://github.com/fsharp/FAKE/pull/1695
+
+        // Therefore we download the reference assemblies (the NETStandard.Library or Microsoft.NETCore.App.Ref package)
+        // and add them in addition to what we have resolved, 
+        // we use the sources in the paket.dependencies to give the user a chance to overwrite.
+
+        // Note: This package/version needs to updated together with our "framework" variable below and needs to 
+        // be compatible with the runtime we are currently running on.
+        let rootDir = Directory.GetCurrentDirectory()
+        let packageName = Domain.PackageName(nuGetPackage)
+        let version = SemVer.Parse(version)
+        let existingpkg = NuGetCache.GetTargetUserNupkg packageName version
+        let extractedFolder =
+          if File.Exists existingpkg then
+            // Shortcut in order to prevent requests to nuget sources if we have it downloaded already
+            Path.GetDirectoryName existingpkg
+          else
+            let sources = paketDependenciesFile.Value.Groups.[groupName].Sources
+            let versions =
+              Paket.NuGet.GetVersions false None rootDir (PackageResolver.GetPackageVersionsParameters.ofParams sources groupName packageName)
+              |> Async.RunSynchronously
+              |> dict
+            let source =
+              match versions.TryGetValue(version) with
+              | true, v when v.Length > 0 -> v |> Seq.head
+              | _ -> failwithf "Could not find package '%A' with version '%A' in any package source of group '%A', but fake needs this package to compile the script" packageName version groupName    
+            
+            let _, extractedFolder =
+              Paket.NuGet.DownloadAndExtractPackage
+                (None, rootDir, false, PackagesFolderGroupConfig.NoPackagesFolder,
+                 source, [], Paket.Constants.MainDependencyGroup,
+                 packageName, version, PackageResolver.ResolvedPackageKind.Package, false, false, false, false)
+              |> Async.RunSynchronously
+            extractedFolder
+        printfn "%s" extractedFolder
+        let sdkDir = Path.Combine(extractedFolder, pathSuffix)
+        Directory.GetFiles(sdkDir, "*.dll")
+        |> Seq.toList
+
+  let getCurrentSDKReferenceFiles() =
+    // here we will match for .NET 6 sdk from a global.json file. If found we will use
+    // .NET 6 runtime assemblies. Otherwise we will default to .Netstandard 2.0.3 
+    match sdkVersionIsDotNet6 with
+    | true ->
+      getRuntimeAssemblies("Microsoft.NETCore.App.Ref", "6.0.0-preview.6.21352.12", Path.Combine("ref", "net6.0"))
+      |> Seq.toList
+    | false ->
+      getRuntimeAssemblies("NETStandard.Library", "2.0.0", Path.Combine("build", "netstandard2.0", "ref"))
+
+#else
+    let framework = Paket.FrameworkIdentifier.DotNetFramework (Paket.FrameworkVersion.V4_6)
+#endif
+
 
   let writeIntellisenseFile cacheDir =
     let intellisenseFile = Path.Combine (cacheDir, Runners.loadScriptName)
